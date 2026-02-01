@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.movie.auth.grpc";
+option java_outer_classname = "AuthProto";
+
+package auth;
+
+service AuthService {
+  // Verify JWT token
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+  
+  // Logout (blacklist token)
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // Get user info
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+  
+  // Check if token is blacklisted
+  rpc IsTokenBlacklisted(IsTokenBlacklistedRequest) returns (IsTokenBlacklistedResponse);
+}
+
+message VerifyTokenRequest {
+  string token = 1;
+}
+
+message VerifyTokenResponse {
+  bool valid = 1;
+  string email = 2;
+  string name = 3;
+  string message = 4;
+}
+
+message LogoutRequest {
+  string token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetUserInfoRequest {
+  string email = 1;
+}
+
+message GetUserInfoResponse {
+  string email = 1;
+  string name = 2;
+  string picture = 3;
+  string googleId = 4;
+}
+
+message IsTokenBlacklistedRequest {
+  string token = 1;
+}
+
+message IsTokenBlacklistedResponse {
+  bool blacklisted = 1;
+}

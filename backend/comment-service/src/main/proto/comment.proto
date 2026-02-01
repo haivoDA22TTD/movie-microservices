@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.movie.comment.grpc";
+option java_outer_classname = "CommentProto";
+
+package comment;
+
+service CommentService {
+  // Get comments by movie ID (streaming)
+  rpc GetCommentsByMovie(GetCommentsByMovieRequest) returns (stream CommentMessage);
+  
+  // Create comment
+  rpc CreateComment(CreateCommentRequest) returns (CreateCommentResponse);
+  
+  // Update comment
+  rpc UpdateComment(UpdateCommentRequest) returns (UpdateCommentResponse);
+  
+  // Delete comment
+  rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse);
+  
+  // Check rate limit
+  rpc CheckRateLimit(CheckRateLimitRequest) returns (CheckRateLimitResponse);
+}
+
+message CommentMessage {
+  int64 id = 1;
+  int64 movieId = 2;
+  string userEmail = 3;
+  string userName = 4;
+  string userPicture = 5;
+  string content = 6;
+  string createdAt = 7;
+  string updatedAt = 8;
+}
+
+message GetCommentsByMovieRequest {
+  int64 movieId = 1;
+}
+
+message CreateCommentRequest {
+  int64 movieId = 1;
+  string userEmail = 2;
+  string userName = 3;
+  string userPicture = 4;
+  string content = 5;
+}
+
+message CreateCommentResponse {
+  bool success = 1;
+  string message = 2;
+  CommentMessage comment = 3;
+}
+
+message UpdateCommentRequest {
+  int64 id = 1;
+  string content = 2;
+}
+
+message UpdateCommentResponse {
+  bool success = 1;
+  string message = 2;
+  CommentMessage comment = 3;
+}
+
+message DeleteCommentRequest {
+  int64 id = 1;
+}
+
+message DeleteCommentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CheckRateLimitRequest {
+  string userEmail = 1;
+}
+
+message CheckRateLimitResponse {
+  bool allowed = 1;
+  int32 remaining = 2;
+  int64 resetTime = 3;
+}

@@ -20,7 +20,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login/**", "/oauth2/**", "/user", "/auth/**").permitAll()
+                .requestMatchers("/login/**", "/oauth2/**", "/user", "/auth/**", "/logout", "/verify-token", "/actuator/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
