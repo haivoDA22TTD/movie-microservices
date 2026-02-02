@@ -1,0 +1,279 @@
+<div class="app-container" [class.light-mode]="!isDarkMode">
+  <!-- Modal thông báo -->
+  <div *ngIf="showNotification" class="notification-modal" (click)="closeNotification()">
+    <div class="notification-content" (click)="$event.stopPropagation()">
+      <div class="notification-icon">{{ notificationIcon }}</div>
+      <h3>{{ notificationTitle }}</h3>
+      <p>{{ notificationMessage }}</p>
+      <button (click)="closeNotification()" class="btn-ok">Đồng ý</button>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="header-left">
+      <h1>🎬 Xem Phim Online</h1>
+    </div>
+
+    <div class="header-center">
+      <div class="search-box">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (keyup.enter)="searchMovies()"
+          placeholder="Tìm kiếm phim...">
+        <button (click)="searchMovies()" class="btn-search">🔍</button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button (click)="toggleTheme()" class="btn-theme">
+        {{ isDarkMode ? '☀️' : '🌙' }}
+      </button>
+
+      <div *ngIf="user" class="user-dropdown">
+        <img 
+          [src]="user.picture" 
+          alt="Avatar" 
+          class="avatar"
+          (click)="toggleUserMenu()">
+        <div *ngIf="showUserMenu" class="dropdown-menu">
+          <div class="user-info-dropdown">
+            <img [src]="user.picture" alt="Avatar" class="avatar-large">
+            <p class="user-name">{{ user.name }}</p>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <button (click)="logout()" class="btn-logout">
+            🚪 Đăng xuất
+          </button>
+        </div>
+      </div>
+
+      <button *ngIf="!user" (click)="loginWithGoogle()" class="btn-login">
+        Đăng nhập với Google
+      </button>
+    </div>
+  </header>
+
+  <nav class="nav-tabs">
+    <button 
+      [class.active]="currentView === 'all'" 
+      (click)="showAllMovies()"
+      class="nav-tab">
+      🎬 Tất cả phim
+    </button>
+    <button 
+      [class.active]="currentView === 'favorites'" 
+      (click)="showFavorites()"
+      class="nav-tab">
+      ❤️ Yêu thích ({{ favoriteMovies.length }})
+    </button>
+  </nav>
+
+  <main class="main-content">
+    <!-- Banner phim hot -->
+    <section class="hero-banner" *ngIf="trendingMovies.length > 0">
+      <div class="banner-slider">
+        <div class="banner-item" *ngFor="let movie of trendingMovies; let i = index" 
+             [class.active]="i === 0"
+             [style.background-image]="'url(https://image.tmdb.org/t/p/original' + movie.backdrop_path + ')'">
+          <div class="banner-overlay"></div>
+          <div class="banner-content">
+            <h2 class="banner-title">{{ movie.title || movie.name }}</h2>
+            <p class="banner-overview">{{ movie.overview }}</p>
+            <div class="banner-meta">
+              <span class="banner-rating">⭐ {{ movie.vote_average?.toFixed(1) }}/10</span>
+              <span class="banner-date">📅 {{ movie.release_date || movie.first_air_date }}</span>
+            </div>
+            <div class="banner-actions">
+              <button (click)="selectMovie(movie)" class="btn-watch">
+                ▶️ Xem ngay
+              </button>
+              <button 
+                (click)="toggleFavorite(movie, $event)" 
+                class="btn-favorite-banner"
+                [class.is-favorite]="isFavorite(movie.id)">
+                {{ isFavorite(movie.id) ? '❤️ Đã thích' : '🤍 Yêu thích' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div *ngIf="selectedMovie" class="video-player">
+      <div class="player-overlay" (click)="closePlayer()"></div>
+      <div class="player-container">
+        <button class="close-btn" (click)="closePlayer()">✕</button>
+        <h2>{{ selectedMovie.title || selectedMovie.name }}</h2>
+        <p class="movie-overview">{{ selectedMovie.overview }}</p>
+        <div class="movie-details">
+          <span class="detail-item">⭐ {{ selectedMovie.vote_average?.toFixed(1) }}/10</span>
+          <span class="detail-item">📅 {{ selectedMovie.release_date || selectedMovie.first_air_date }}</span>
+        </div>
+        
+        <!-- Tab chọn xem phim hoặc trailer -->
+        <div class="video-tabs">
+          <button 
+            [class.active]="selectedMovie.showMovie !== false" 
+            (click)="selectedMovie.showMovie = true"
+            class="video-tab">
+            🎬 Xem phim
+          </button>
+          <button 
+            [class.active]="selectedMovie.showMovie === false" 
+            (click)="selectedMovie.showMovie = false"
+            class="video-tab"
+            *ngIf="selectedMovie.videoKey">
+            🎥 Trailer
+          </button>
+        </div>
+        
+        <!-- Xem phim thật -->
+        <iframe 
+          *ngIf="selectedMovie.showMovie !== false && selectedMovie.embedUrl"
+          [src]="selectedMovie.embedUrl | safe"
+          frameborder="0"
+          allowfullscreen
+          class="movie-iframe">
+        </iframe>
+        
+        <!-- Xem trailer -->
+        <iframe 
+          *ngIf="selectedMovie.showMovie === false && selectedMovie.videoKey"
+          [src]="'https://www.youtube.com/embed/' + selectedMovie.videoKey | safe"
+          frameborder="0"
+          allowfullscreen
+          class="movie-iframe">
+        </iframe>
+        
+        <p *ngIf="!selectedMovie.embedUrl && !selectedMovie.videoKey" class="no-trailer">
+          😔 Không tìm thấy nguồn phim
+        </p>
+
+        <!-- Phần bình luận -->
+        <div class="comments-section">
+          <h3 class="comments-title">💬 Bình luận ({{ comments.length }})</h3>
+          
+          <!-- Form đăng bình luận -->
+          <div class="comment-form" *ngIf="user">
+            <img [src]="user.picture" alt="Avatar" class="comment-avatar">
+            <div class="comment-input-wrapper">
+              <textarea 
+                [(ngModel)]="newComment"
+                placeholder="Viết bình luận của bạn..."
+                class="comment-input"
+                rows="3"></textarea>
+              <button 
+                (click)="postComment()" 
+                class="btn-post-comment"
+                [disabled]="!newComment.trim()">
+                📤 Đăng bình luận
+              </button>
+            </div>
+          </div>
+
+          <div class="comment-login-prompt" *ngIf="!user">
+            <p>🔒 Vui lòng đăng nhập để bình luận</p>
+            <button (click)="loginWithGoogle()" class="btn-login-comment">
+              Đăng nhập với Google
+            </button>
+          </div>
+
+          <!-- Danh sách bình luận -->
+          <div class="comments-list">
+            <div *ngFor="let comment of comments" class="comment-item">
+              <img [src]="comment.userPicture" alt="Avatar" class="comment-avatar">
+              <div class="comment-content">
+                <div class="comment-header">
+                  <span class="comment-author">{{ comment.userName }}</span>
+                  <span class="comment-date">{{ comment.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                
+                <!-- Chế độ xem bình luận -->
+                <p class="comment-text" *ngIf="editingCommentId !== comment.id">
+                  {{ comment.content }}
+                </p>
+                
+                <!-- Chế độ chỉnh sửa -->
+                <div class="comment-edit" *ngIf="editingCommentId === comment.id">
+                  <textarea 
+                    [(ngModel)]="editingCommentText"
+                    class="comment-input"
+                    rows="3"></textarea>
+                  <div class="comment-edit-actions">
+                    <button (click)="saveEditComment(comment.id)" class="btn-save">
+                      ✅ Lưu
+                    </button>
+                    <button (click)="cancelEditComment()" class="btn-cancel">
+                      ❌ Hủy
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Nút hành động -->
+                <div class="comment-actions" *ngIf="user && user.email === comment.userEmail && editingCommentId !== comment.id">
+                  <button (click)="startEditComment(comment)" class="btn-edit">
+                    ✏️ Sửa
+                  </button>
+                  <button (click)="deleteComment(comment.id)" class="btn-delete">
+                    🗑️ Xóa
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="comments.length === 0" class="no-comments">
+              <p>💭 Chưa có bình luận nào. Hãy là người đầu tiên bình luận!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="displayedMovies.length === 0" class="empty-state">
+      <p *ngIf="currentView === 'favorites'">
+        💔 Bạn chưa có phim yêu thích nào. Hãy thêm phim yêu thích bằng cách nhấn vào biểu tượng ❤️
+      </p>
+      <p *ngIf="currentView === 'all'">
+        🔍 Không tìm thấy phim nào
+      </p>
+    </div>
+
+    <div class="movies-grid">
+      <div *ngFor="let movie of displayedMovies" class="movie-card">
+        <div class="movie-poster-wrapper" (click)="selectMovie(movie)">
+          <img 
+            [src]="movie.poster_path ? 'https://image.tmdb.org/t/p/w500' + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Image'" 
+            [alt]="movie.title || movie.name"
+            class="movie-poster">
+          <div class="movie-overlay">
+            <button class="btn-play">▶️ Xem ngay</button>
+          </div>
+        </div>
+        <div class="movie-info">
+          <h3>{{ movie.title || movie.name }}</h3>
+          <div class="movie-meta">
+            <span class="rating">⭐ {{ movie.vote_average?.toFixed(1) }}/10</span>
+            <button 
+              (click)="toggleFavorite(movie, $event)" 
+              class="btn-favorite"
+              [class.is-favorite]="isFavorite(movie.id)">
+              {{ isFavorite(movie.id) ? '❤️' : '🤍' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load more button -->
+    <div class="load-more-section" *ngIf="currentView === 'all' && hasMorePages">
+      <button 
+        (click)="loadMoreMovies()" 
+        class="btn-load-more"
+        [disabled]="isLoading">
+        <span *ngIf="!isLoading">📥 Tải thêm phim</span>
+        <span *ngIf="isLoading">⏳ Đang tải...</span>
+      </button>
+    </div>
+  </main>
+</div>
