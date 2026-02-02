@@ -19,21 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-ACADEMIC PROJECT NOTICE:
-
-This project is developed for educational and research purposes only. It is not
-intended for production use or commercial purposes. The project demonstrates
-microservices architecture, DevOps practices, and modern software development
-technologies.
-
-THIRD-PARTY SERVICES:
-
-This project integrates with third-party services:
-- Google OAuth2 API (subject to Google's Terms of Service)
-- The Movie Database (TMDB) API (subject to TMDB's Terms of Use)
-
-Users must comply with the respective terms of service of these third-party
-providers when using this software.
