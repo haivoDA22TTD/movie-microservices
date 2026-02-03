@@ -421,8 +421,8 @@ Purpose: Reduce database load
 
 **1. Clone repository:**
 ```bash
-git clone https://github.com/haivoDA22TTD/movie-streaming-microservices.git
-cd movie-streaming-microservices
+git clone https://github.com/haivoDA22TTD/movie-microservices.git
+cd movie-microservices
 ```
 
 **2. Cấu hình environment variables:**
@@ -787,7 +787,7 @@ Mọi đóng góp đều được chào đón! Vui lòng:
 ## 📞 Liên hệ
 
 Nếu bạn có câu hỏi hoặc gặp vấn đề, vui lòng:
-- Mở [Issue](https://github.com/haivoDA22TTD/movie-streaming-microservices/issues)
+- Mở [Issue](https://github.com/haivoDA22TTD/movie-microservices/issues)
 - Hoặc liên hệ qua email: [110122068@st.tvu.edu.vn]
 
 ---
